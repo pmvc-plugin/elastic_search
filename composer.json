@@ -1,0 +1,19 @@
+{
+    "name": "pmvc-plugin/elastic_search",
+    "description": "elastic search",
+    "type": "library",
+    "keywords": ["elastic search", "pmvc", "plug-in"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Hill",
+            "email": "hill@kimo.com"
+        }
+    ],
+    "require": {
+        "pmvc/pmvc": "*",
+        "pmvc-plugin/dotenv": "*",
+        "pmvc-plugin/curl": "*"
+    },
+    "minimum-stability": "dev"
+}
