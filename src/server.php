@@ -34,7 +34,7 @@ class server
             $params
         );
         $curl  = \PMVC\plug('curl');
-        $curl->get($url,function($r) use (&$respond){
+        $curl->get($url,function($r) use (&$respond, $url){
             if (200 === $r->code) {
                $respond = json_decode($r->body);
             } else {
