@@ -35,10 +35,13 @@ class server
         );
         $curl  = \PMVC\plug('curl');
         $curl->get($url,function($r) use (&$respond, $url){
-            if (200 === $r->code) {
-               $respond = json_decode($r->body);
+            if (400 >= $r->code) {
+               $respond = (object)array(
+                'header'=>$r->header,
+                'body'=>json_decode($r->body)
+               );
             } else {
-                trigger_error('Get result error. Error Code:'.$r->code. ' url:'.$url);
+                trigger_error('Get result error. Error Code:'.$r->code. ' url: '.$url);
             }
         })->set($params);
         $curl->run();
