@@ -10,14 +10,41 @@ class db implements \ArrayAccess
     protected $results;
     protected $last_result;
 
-    function getAll()
+    /**
+     * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html
+     */
+    function getAll($size=null)
     {
-        $this->path='_search?q=*:*';
-        $return =  $this->request();
+        //<!-- Get scroll id 
+        if(is_null($size)){
+            $size = $this->getTotal();
+        }
+        $this->path='_search?search_type=scan&scroll=10m&size='.$size;
+        $match_all = array(
+            'query'=>array(
+                'match_all'=> new \stdClass()
+            )
+        );
+        $this->setCommand(null, $this->getPost($match_all));
+        $scroll_id_return =  $this->request();
+        $scroll_id = $scroll_id_return->body->_scroll_id;
+        // Get scroll id -->
+
+        //<!-- Get Data 
+        $path='/_search/scroll?scroll=10m&scroll_id='.$scroll_id;
+        $return =  $this->request($path);
         return (object)array(
             'hits'=>$return->body->hits->hits,
             'total'=>$return->body->hits->total
         );
+        // Get Data --> 
+    }
+
+    function getTotal()
+    {
+        $this->path='_search?q=*:*&size=0';
+        $return =  $this->request();
+        return $return->body->hits->total;
     }
 
     function setPath($path)
@@ -30,8 +57,11 @@ class db implements \ArrayAccess
         return '/'.$this->index.'/'.$this->type.'/'.$this->path.$this->extra_path;
     }
 
-    function setCommand($method, $params=array())
+    function setCommand($method=null, $params=array())
     {
+        if (is_null($method)) {
+            $method = 'GET';
+        }
         $arr = array(
             CURLOPT_CUSTOMREQUEST=>$method
         );
@@ -41,23 +71,43 @@ class db implements \ArrayAccess
         $this->command =& $arr;
     }
 
+    /**
+     * get Post curl array
+     */
+     public function getPost($v)
+     {
+        if (!is_string($v)) {
+           $v = json_encode($v); 
+        }
+        return array (
+           CURLOPT_POSTFIELDS => $v
+        );
+     }
 
     function getCommand()
     {
         return $this->command;
     }
 
-    function request()
+    function reset()
     {
-        $es = \PMVC\plug('elastic_search');
-        $server = $es->getDefaultServer();
-        $return =  $server->request(
-            $this->getPath()
-            ,$this->getCommand()
-        );
         $this->command = null;
         $this->path = null;
         $this->extra_path = null;
+    }
+
+    function request($path=null)
+    {
+        if (is_null($path)) {
+            $path = $this->getPath();
+        }
+        $es = \PMVC\plug('elastic_search');
+        $server = $es->getDefaultServer();
+        $return =  $server->request(
+            $path
+            ,$this->getCommand()
+        );
+        $this->reset();
         return $return;
     }
 
@@ -100,15 +150,6 @@ class db implements \ArrayAccess
         return isset($return->header);
     }
 
-    /**
-     * get Post curl array
-     */
-     public function getPost($v)
-     {
-        return array (
-           CURLOPT_POSTFIELDS => json_encode($v) 
-        );
-     }
 
     /**
      * Set 
