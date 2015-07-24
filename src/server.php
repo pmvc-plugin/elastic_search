@@ -10,7 +10,17 @@ class server
 
     public function getIndexList()
     {
-
+        $path = '/_aliases';
+        $return = $this->request($path);
+        if (empty($return->body)) {
+            trigger_error('no index found in this server: '.$this->getBaseUrl());
+            return;
+        }
+        $arr = array();
+        foreach ($return->body as $k=>$v) {
+             $arr[]=$k;
+        }
+        return $arr;
     }
 
     public function getPort()
@@ -23,10 +33,15 @@ class server
         }
     }
 
+    public function getBaseUrl()
+    {
+        return $this->scheme.'://'.$this->host.$this->getPort();
+    }
+
     public function request($path,$params=array())
     {
         $respond = null;
-        $url = $this->scheme.'://'.$this->host.$this->getPort().$path;
+        $url = $this->getBaseUrl().$path;
         $params = \PMVC\array_merge (
             array(
                 CURLOPT_USERPWD=>$this->auth 

@@ -224,6 +224,15 @@ class db implements \ArrayAccess
         return $return;
     }
 
+    public function deleteAll()
+    {
+        $this->path='_query?q=*:*';
+        $this->setCommand('DELETE');
+        $return =  $this->request();
+        $this->setResult($return);
+        return $return;
+    }
+
     /**
      * Set Result
      */
