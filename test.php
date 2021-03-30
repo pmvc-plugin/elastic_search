@@ -1,6 +1,6 @@
 <?php
-PMVC\Load::plug();
-PMVC\setPlugInFolder('../');
+\PMVC\Load::plug();
+\PMVC\addPlugInFolders([__DIR__.'/../']);
 class ElasticSearchTest extends PHPUnit_Framework_TestCase
 {
     function testPlugin()
